@@ -1,6 +1,12 @@
 name: Daily Repository Update
 
 on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
   schedule:
     # triggers at 2:50 AM IST (which is 9:20 PM UTC)
     - cron: '20 21 * * *'   # Triggers at 9:20 PM UTC (2:50 AM IST)
