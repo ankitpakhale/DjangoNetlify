@@ -1,12 +1,9 @@
 name: Daily Repository Update
 
 on:
-  push:
-    branches:
-      - master
-
   schedule:
-    - cron: '20 20 * * *' # Triggers at 2:00 AM IST (20:20 UTC)
+    # triggers at 2:50 AM IST (which is 9:20 PM UTC)
+    - cron: '20 21 * * *'   # Triggers at 9:20 PM UTC (2:50 AM IST)
 
 permissions:
   contents: write # allows pushing changes to the repository
@@ -19,22 +16,14 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v2
 
-      # randomly select a delay time
-      - name: set random delay
-        id: delay
+      # randomly choose the number of pushes (0, 1, or 2)
+      - name: choose number of pushes
+        id: pushes
         run: |
-
-          # define the list of possible delays in seconds
-          delays=(0 1800 2700 3900 4500 5400) # delays for 2:00, 2:30, 2:45, 3:05, 3:15, 3:30
-          RANDOM_DELAY=${delays[$RANDOM % ${#delays[@]}]}
-          echo "Selected delay: $RANDOM_DELAY seconds"
-          echo "::set-output name=delay::$RANDOM_DELAY"
-
-      # wait for the random delay
-      - name: wait for random time
-        run: |
-          echo "Waiting for ${{ steps.delay.outputs.delay }} seconds before starting the job..."
-          sleep ${{ steps.delay.outputs.delay }}
+          # randomly choose the number of pushes (0, 1, or 2)
+          PUSH_COUNT=$((RANDOM % 3))
+          echo "selected number of pushes: $PUSH_COUNT"
+          echo "::set-output name=push_count::$PUSH_COUNT"
 
       # set up git user
       - name: set git user
@@ -42,17 +31,19 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      # make repository changes
+      # clear the update_log.md file before making changes
+      - name: clear update_log.md file
+        run: |
+          echo "" > update_log.md
+          echo "cleared update_log.md before updating" # just for logging purposes
+
+      # make repository changes and push at the selected times
       - name: make repository changes
         run: |
-          echo "# Auto-updated on $(date)" >> update_log.md
-          git add update_log.md
-
-      # commit and push changes
-      - name: commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        run: |
-          git commit -m "chore: daily update at $(date)"
-          git push
+          # iterate over the selected number of pushes
+          for i in $(seq 1 ${{ steps.pushes.outputs.push_count }}); do
+            echo "# auto-updated at $(date)" >> update_log.md
+            git add update_log.md
+            git commit -m "chore: update at $(date)"
+            git push
+          done
