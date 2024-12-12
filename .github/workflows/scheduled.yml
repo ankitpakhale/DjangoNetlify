@@ -1,0 +1,40 @@
+name: Daily Repository Update
+
+on:
+  push:
+    branches:
+      - master
+
+  schedule:
+    - cron: '20 21 * * *' # 2:50 AM IST (IST is UTC+5:30, so subtract 5 hours 30 minutes)
+
+permissions:
+  contents: write # allows pushing changes to the repository
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repository
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      # set up git user
+      - name: set git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # make changes in the repository
+      - name: make repository changes
+        run: |
+          echo "# Auto-updated on $(date)" >> update_log.md
+          git add update_log.md
+
+      # commit and push changes
+      - name: commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git commit -m "chore: daily update at $(date)"
+          git push
