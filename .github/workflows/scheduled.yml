@@ -16,6 +16,13 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v2
 
+      # take pull of latest codebase 
+      - name: take latest pull
+        id: pull
+        run: |
+          echo "taking latest pull"
+          git pull origin master 
+
       # randomly choose the number of pushes (0, 1, or 2)
       - name: choose number of pushes
         id: pushes
