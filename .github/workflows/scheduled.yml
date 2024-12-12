@@ -6,7 +6,7 @@ on:
       - master
 
   schedule:
-    - cron: '20 21 * * *' # 2:50 AM IST (IST is UTC+5:30, so subtract 5 hours 30 minutes)
+    - cron: '20 20 * * *' # Triggers at 2:00 AM IST (20:20 UTC)
 
 permissions:
   contents: write # allows pushing changes to the repository
@@ -19,13 +19,30 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v2
 
+      # randomly select a delay time
+      - name: set random delay
+        id: delay
+        run: |
+
+          # define the list of possible delays in seconds
+          delays=(0 1800 2700 3900 4500 5400) # delays for 2:00, 2:30, 2:45, 3:05, 3:15, 3:30
+          RANDOM_DELAY=${delays[$RANDOM % ${#delays[@]}]}
+          echo "Selected delay: $RANDOM_DELAY seconds"
+          echo "::set-output name=delay::$RANDOM_DELAY"
+
+      # wait for the random delay
+      - name: wait for random time
+        run: |
+          echo "Waiting for ${{ steps.delay.outputs.delay }} seconds before starting the job..."
+          sleep ${{ steps.delay.outputs.delay }}
+
       # set up git user
       - name: set git user
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      # make changes in the repository
+      # make repository changes
       - name: make repository changes
         run: |
           echo "# Auto-updated on $(date)" >> update_log.md
@@ -35,6 +52,7 @@ jobs:
       - name: commit and push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
         run: |
           git commit -m "chore: daily update at $(date)"
           git push
