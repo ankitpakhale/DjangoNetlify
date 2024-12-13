@@ -38,7 +38,8 @@ jobs:
       - name: Make repository changes and push
         run: |
           for i in $(seq 1 ${{ steps.pushes.outputs.push_count }}); do
-            echo "\n>>>>>>>>>> Taking latest pull"
+            echo ""
+            echo ">>>>>>>>>> Taking latest pull"
             git pull origin master  # Ensure we're working with the latest changes
 
             echo "" > update_log.md
@@ -51,5 +52,7 @@ jobs:
             git add update_log.md
             git commit -m "chore: update at $(date)"
             git push
-            echo ">>>>>>>>>> Pushed latest changes\n"
+            echo ">>>>>>>>>> Pushed latest changes"
+            echo ""
+
           done
