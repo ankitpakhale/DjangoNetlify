@@ -31,7 +31,7 @@ jobs:
       # set up git user
       - name: Set git user
         run: |
-          git config --global user.name "ankit.pakhale"
+          git config --global user.name "ankitpakhale"
           git config --global user.email "akp3067@gmail.com"
 
       # loop over the selected number of pushes
