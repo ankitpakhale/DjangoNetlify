@@ -40,17 +40,20 @@ jobs:
           for i in $(seq 1 ${{ steps.pushes.outputs.push_count }}); do
             echo ""
             echo ">>>>>>>>>> Taking latest pull"
-            git pull origin master  # Ensure we're working with the latest changes
+            git pull origin master  # ensure we're working with the latest changes
 
             echo "" > update_log.md
             echo ">>>>>>>>>> Cleared update_log.md file"
 
             echo ">>>>>>>>>> Make changes in update_log.md"
-            echo "# auto-updated at $(date)" >> update_log.md
+            echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
+
+            echo ">>>>>>>>>> Checking contents of update_log.md"
+            cat update_log.md  # debugging step to print the file contents
 
             echo ">>>>>>>>>> Adding, commiting & pushing the latest changes...."
-            git add update_log.md
-            git commit -m "chore: update at $(date)"
+            git add -A  # all changes are staged
+            git commit -m "chore: update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
             git push
             echo ">>>>>>>>>> Pushed latest changes"
             echo ""
