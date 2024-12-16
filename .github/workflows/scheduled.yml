@@ -81,10 +81,10 @@ jobs:
           delete-branch: false
           draft: false
 
-      # Step 9: Validate PR creation
+      # Step 9: Validate Pull Request
       - name: Validate Pull Request
         run: |
-          if [ "${{ steps.create_pr.outputs.pull-request-url }}" == "" ]; then
+          if [ -z "${{ steps.create_pr.outputs.pull-request-url }}" ]; then
             echo "Pull Request was not created. Check previous steps for issues."
             exit 1
           else
