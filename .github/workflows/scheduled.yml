@@ -44,10 +44,12 @@ jobs:
           git fetch origin master
           git rebase origin/master || git rebase --abort
 
-      # Step 6: Resolve conflicts using 'ours' strategy (if any)
-      - name: Resolve conflicts automatically
+      # Step 6: Automatically resolve conflicts (force "ours" strategy)
+      - name: Resolve merge conflicts automatically
         run: |
-          git merge -X ours origin/master || true
+          git merge --strategy-option=ours origin/master || true
+          git add .
+          git rebase --continue || true
 
       # Step 7: Update the file (simulate a contribution)
       - name: Update update_log.md
@@ -77,3 +79,10 @@ jobs:
           signoff: false
           delete-branch: false
           draft: false
+
+      # Step 10: Validate PR creation
+      - name: Validate Pull Request
+        if: steps.create_pr.outputs.pull-request-url == ''
+        run: |
+          echo "Pull Request was not created. Check conflict resolution or branch creation steps."
+          exit 1
