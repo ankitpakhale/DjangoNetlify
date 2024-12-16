@@ -51,11 +51,17 @@ jobs:
           echo "" > update_log.md
           echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
 
-      # Step 7: Add, commit, and push changes
-      - name: Commit and push changes
+      # Step 7: Update, commit, and push changes
+      - name: Update, commit, and push changes
         run: |
+          # Update the file
+          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" > update_log.md
+          
+          # Stage and commit the changes
           git add update_log.md
           git commit -m "chore: auto update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          
+          # Push changes to the update branch
           git push origin update-branch --force
 
       # Step 8: Create a pull request
@@ -79,7 +85,7 @@ jobs:
       - name: Validate Pull Request
         run: |
           if [ "${{ steps.create_pr.outputs.pull-request-url }}" == "" ]; then
-            echo "Pull Request was not created. Check conflict resolution or branch creation steps."
+            echo "Pull Request was not created. Check previous steps for issues."
             exit 1
           else
             echo "Pull Request successfully created: ${{ steps.create_pr.outputs.pull-request-url }}"
