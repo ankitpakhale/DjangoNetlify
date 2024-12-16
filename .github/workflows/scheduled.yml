@@ -29,17 +29,15 @@ jobs:
       # create a new branch for the changes
       - name: create and commit changes
         run: |
-          git checkout master  # ensure we are on the master branch
-          git pull origin master  # pull the latest changes from master
-
-          # create a new branch from master
+          git checkout master
+          git pull origin master
           git checkout -b update-branch
 
-          # pull the latest changes from the remote update-branch (if it exists)
-          git pull origin update-branch --rebase || true  # try rebase, if it fails, continue
+          # try to pull with rebase, or resolve merge conflicts automatically
+          git pull origin update-branch --rebase || true
 
-          # resolve conflicts automatically by favoring the changes from the current branch
-          git merge --strategy-option=ours origin/update-branch || true  # automatically resolve conflicts
+          # resolve conflicts by always favoring the local changes (ours)
+          git merge --strategy=recursive --strategy-option=ours origin/update-branch || true
 
           # make changes to the file
           echo "" > update_log.md
