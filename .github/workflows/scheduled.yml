@@ -50,3 +50,4 @@ jobs:
           curl -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -d '{"merge_method": "merge"}' \
             "$PR_URL/merge"
+
