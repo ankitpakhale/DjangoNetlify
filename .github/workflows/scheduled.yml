@@ -29,23 +29,24 @@ jobs:
       # create a new branch for the changes
       - name: create and commit changes
         run: |
-          # ensure we are on the master branch
-          git checkout master  
-          # pull the latest changes from master
-          git pull origin master  
+          git checkout master  # ensure we are on the master branch
+          git pull origin master  # pull the latest changes from master
 
           # create a new branch from master
           git checkout -b update-branch
 
           # pull the latest changes from the remote update-branch (if it exists)
-          git pull origin update-branch --rebase  # rebase onto remote update-branch
-      
+          git pull origin update-branch --rebase || true  # try rebase, if it fails, continue
+
+          # resolve conflicts automatically by favoring the changes from the current branch
+          git merge --strategy-option=ours origin/update-branch || true  # automatically resolve conflicts
+
           # make changes to the file
           echo "" > update_log.md
           echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
 
           # stage and commit the changes
-          git add -A
+          git add update_log.md
           git commit -m "chore: update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
 
           # push the changes to the remote update-branch
