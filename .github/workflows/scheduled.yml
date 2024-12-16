@@ -1,61 +1,52 @@
-name: Daily Repository Update
+name: Daily Run
 
 on:
-  push:
-    branches:
-      - master
   schedule:
-    # triggers at 2:50 AM IST (which is 9:20 PM UTC)
+    # triggers at 2:50 am ist (9:20 pm utc)
     - cron: '20 21 * * *'
 
 permissions:
-  contents: write # allows pushing changes to the repository
+  contents: write  # allows pushing changes to the repository
+  pull-requests: write  # allows creating and merging prs
 
 jobs:
-  Pull-and-Push:
+  auto-update:
     runs-on: ubuntu-latest
     steps:
-      # checkout the repository
-      - name: Checkout code
+      # checkout the code
+      - name: checkout code
         uses: actions/checkout@v2
 
-      # choose the number of pushes (0, 1, or 2)
-      - name: Choose number of pushes
-        id: pushes
-        run: |
-          # randomly choose the number of pushes (0, 1, or 2)
-          PUSH_COUNT=$((RANDOM % 3))
-          echo "selected number of pushes: $PUSH_COUNT"
-          echo "::set-output name=push_count::$PUSH_COUNT"
-
       # set up git user
-      - name: Set git user
+      - name: set git user
         run: |
           git config --global user.name "ankitpakhale"
           git config --global user.email "akp3067@gmail.com"
 
-      # loop over the selected number of pushes
-      - name: Make repository changes and push
+      # create a new branch for the changes
+      - name: create and commit changes
         run: |
-          for i in $(seq 1 ${{ steps.pushes.outputs.push_count }}); do
-            echo ""
-            echo ">>>>>>>>>> Taking latest pull"
-            git pull origin master  # ensure we're working with the latest changes
+          git checkout -b update-branch
+          echo "" > update_log.md
+          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
+          git add update_log.md
+          git commit -m "chore: update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
+          git push origin update-branch
 
-            echo "" > update_log.md
-            echo ">>>>>>>>>> Cleared update_log.md file"
+      # create a pull request
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v3
+        id: create_pr
+        with:
+          title: "automated update: $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
+          body: "this is an automated pr to update the repository with a timestamp."
+          base: master  # use your default branch here (master/main)
+          head: update-branch
 
-            echo ">>>>>>>>>> Make changes in update_log.md"
-            echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
-
-            echo ">>>>>>>>>> Checking contents of update_log.md"
-            cat update_log.md  # debugging step to print the file contents
-
-            echo ">>>>>>>>>> Adding, commiting & pushing the latest changes...."
-            git add -A  # all changes are staged
-            git commit -m "chore: update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-            git push
-            echo ">>>>>>>>>> Pushed latest changes"
-            echo ""
-
-          done
+      # auto-merge the pull request
+      - name: auto-merge pull request
+        run: |
+          PR_URL=$(jq -r .pullRequest.url < "${{ steps.create_pr.outputs.pull_request_url }}")
+          curl -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d '{"merge_method": "merge"}' \
+            "$PR_URL/merge"
