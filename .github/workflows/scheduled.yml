@@ -13,60 +13,54 @@ permissions:
   pull-requests: write  # allows creating and merging prs
 
 jobs:
-  auto-update:
+  commit-to-master:
     runs-on: ubuntu-latest
+
     steps:
-      # checkout the code
-      - name: checkout code
+      # Step 1: Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      # set up git user
-      - name: set git user
+      # Step 2: Set up Git user configuration
+      - name: Set git user
         run: |
           git config --global user.name "ankitpakhale"
           git config --global user.email "akp3067@gmail.com"
 
-      # create a new branch for the changes
-      - name: create and commit changes
+      # Step 3: Ensure we are on the master branch and update it
+      - name: Checkout master and pull latest
         run: |
           git checkout master
           git pull origin master
-          git checkout -b update-branch
-          git pull origin update-branch
 
-          # Replace or insert the update message in line 10 of update_log.md
-          sed -i '10s/.*/# auto-updated at $(TZ="Asia/Kolkata" date +"%Y-%m-%d %H:%M:%S")/' update_log.md
-
-          # Stage and commit the changes
-          git add update_log.md
-          git commit -m "chore: update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
-          git push origin update-branch
-
-      # create a pull request
-      - name: create pull request
-        uses: peter-evans/create-pull-request@v3
-        id: create_pr
-        with:
-          title: "automated update: $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
-          body: "this is an automated pr to update the repository with a timestamp."
-          base: master  # use your default branch here (master/main)
-          head: update-branch
-
-      # auto-merge the pull request
-      - name: auto-merge pull request
+      # Step 4: Create a new branch (if necessary)
+      - name: Create and switch to update branch
         run: |
-          # capture the pr url directly from the output
-          PR_URL="${{ steps.create_pr.outputs.pull_request_url }}"
-          
-          # check if the PR URL exists and is not empty
-          if [[ -n "$PR_URL" ]]; then
-            echo "PR URL: $PR_URL"
-            
-            # merge the PR using the GitHub API
-            curl -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -d '{"merge_method": "merge"}' \
-              "$PR_URL/merge"
-          else
-            echo "Failed to get PR URL. Exiting."
-            exit 1
-          fi
+          git checkout -b update-branch
+
+      # Step 5: Pull the latest changes from the update branch (with rebase to avoid merge conflicts)
+      - name: Pull changes from update-branch
+        run: |
+          git pull origin update-branch --rebase || true # Use '|| true' to prevent failure on conflicts
+
+      # Step 6: Update the file (automatically edit the file to simulate a contribution)
+      - name: Update update_log.md
+        run: |
+          echo "" > update_log.md
+          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
+
+      # Step 7: Add, commit, and push changes
+      - name: Commit and push changes
+        run: |
+          git add update_log.md
+          git commit -m "chore: auto update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push origin update-branch || echo "Failed to push"
+
+      # Step 8: Create a pull request (optional, if you want to use PRs to trigger contributions)
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: "Auto-update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
+          body: "Automated commit to update the log file"
+          head: update-branch
+          base: master
