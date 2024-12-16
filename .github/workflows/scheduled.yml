@@ -49,8 +49,18 @@ jobs:
       # auto-merge the pull request
       - name: auto-merge pull request
         run: |
-          PR_URL=$(jq -r .pullRequest.url < "${{ steps.create_pr.outputs.pull_request_url }}")
-          curl -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{"merge_method": "merge"}' \
-            "$PR_URL/merge"
-
+          # capture the pr url directly from the output
+          PR_URL="${{ steps.create_pr.outputs.pull_request_url }}"
+          
+          # check if the PR URL exists and is not empty
+          if [[ -n "$PR_URL" ]]; then
+            echo "PR URL: $PR_URL"
+            
+            # merge the PR using the GitHub API
+            curl -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -d '{"merge_method": "merge"}' \
+              "$PR_URL/merge"
+          else
+            echo "Failed to get PR URL. Exiting."
+            exit 1
+          fi
