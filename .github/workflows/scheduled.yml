@@ -1,8 +1,11 @@
 name: Daily Run
 
 on:
+  push:
+    branches:
+      - master
   schedule:
-    # triggers at 2:50 am ist (9:20 pm utc)
+    # triggers at 2:50 AM IST (which is 9:20 PM UTC)
     - cron: '20 21 * * *'
 
 permissions:
