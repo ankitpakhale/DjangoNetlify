@@ -81,6 +81,13 @@ jobs:
           delete-branch: false
           draft: false
 
+      # Step 8.5: Log Pull Request
+      - name: Debug - Log PR Output
+        run: |
+          echo "PR URL: ${{ steps.create_pr.outputs.pull-request-url }}"
+          echo "PR Number: ${{ steps.create_pr.outputs.pull-request-number }}"
+          echo "PR Created: ${{ steps.create_pr.outputs.pull-request-created }}"
+
       # Step 9: Validate Pull Request
       - name: Validate Pull Request
         run: |
