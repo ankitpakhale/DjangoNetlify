@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  pull-requests: write # crucial for creating PRs
 
 jobs:
   commit-to-master:
@@ -67,7 +67,7 @@ jobs:
       # Step 8: Create a pull request
       - name: Create Pull Request
         id: create_pr  # Add an ID for output validation
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4 # Use the latest version
         with:
           title: "Auto-update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
           body: "Automated commit to update the log file"
