@@ -84,9 +84,9 @@ jobs:
       # Step 9: Validate Pull Request
       - name: Validate Pull Request
         run: |
-          if [ -z "${{ steps.create_pr.outputs.pull-request-url }}" ]; then
-            echo "Pull Request was not created. Check previous steps for issues."
-            exit 1
-          else
+          if [ -n "${{ steps.create_pr.outputs.pull-request-url }}" ]; then
             echo "Pull Request successfully created: ${{ steps.create_pr.outputs.pull-request-url }}"
+          else
+            echo "Pull Request creation failed. Check previous steps for issues."
+            exit 1
           fi
