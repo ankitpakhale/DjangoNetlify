@@ -1,52 +1,58 @@
-name: Daily Update
+name: Daily Repository Update
 
 on:
   push:
     branches:
       - master
   schedule:
-    # triggers at 2:50 AM IST (9:20 PM UTC)
+    # triggers at 2:50 AM IST (which is 9:20 PM UTC)
     - cron: '20 21 * * *'
 
 permissions:
-  contents: write
-  pull-requests: write # crucial for creating PRs
+  contents: write # allows pushing changes to the repository
 
 jobs:
-  update_master:
+  Pull-and-Push:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: checkout the repository
+      # checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      # Step 2: set up Git user using GitHub secrets
+      # choose the number of pushes (0, 1, or 2)
+      - name: Choose number of pushes
+        id: pushes
+        run: |
+          # randomly choose the number of pushes (0, 1, or 2)
+          PUSH_COUNT=$((RANDOM % 3))
+          echo "selected number of pushes: $PUSH_COUNT"
+          echo "::set-output name=push_count::$PUSH_COUNT"
+
+      # set up git user
       - name: Set git user
         run: |
           git config --global user.name "${{ secrets.USERNAME }}"
           git config --global user.email "${{ secrets.EMAIL }}"
 
-      # Step 3: fetch latest changes 
-      - name: Fetch latest changes
-        run: git fetch origin master
-
-      # Step 4: checkout to master branch 
-      - name: Checkout master branch
-        run: git checkout master
-
-      # Step 5: add current IST and UTC time in update_log.md file  
-      - name: Update update_log.md
+      # loop over the selected number of pushes
+      - name: Make repository changes and push
         run: |
-          echo "" > update_log.md  # Clear previous content
-          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S IST')" >> update_log.md
-          echo "# auto-updated at $(TZ='UTC' date +'%Y-%m-%d %H:%M:%S UTC')" >> update_log.md
+          for i in $(seq 1 ${{ steps.pushes.outputs.push_count }}); do
+            echo ""
+            echo ">>>>>>>>>> Taking latest pull"
+            git pull origin master  # Ensure we're working with the latest changes
 
-      # Step 6: add update_log.md file and commit it  
-      - name: Add and commit changes
-        run: |
-          git add update_log.md
-          git commit -m "Corrected typo in error message for invalid password"
+            echo "" > update_log.md
+            echo ">>>>>>>>>> Cleared update_log.md file"
 
-      # Step 7: push the latest changes
-      - name: Push changes to master
-        run: git push origin master
+            echo ">>>>>>>>>> Make changes in update_log.md"
+            echo "# auto-updated at $(date)" >> update_log.md
+
+            echo ">>>>>>>>>> Adding, commiting & pushing the latest changes...."
+            git add update_log.md
+            git commit -m "chore: update at $(date)"
+            git push
+            echo ">>>>>>>>>> Pushed latest changes"
+            echo ""
+
+          done
