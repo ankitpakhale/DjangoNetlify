@@ -1,4 +1,4 @@
-name: Daily Run
+name: Daily Update
 
 on:
   push:
@@ -13,92 +13,46 @@ permissions:
   pull-requests: write # crucial for creating PRs
 
 jobs:
-  commit-to-master:
+  update_master:
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Step 2: Set up Git user configuration
+      # Step 2: fetch Git user 
       - name: Set git user from secret
         run: |
           echo "username=${{ secrets.USERNAME }}" >> $GITHUB_ENV
           echo "email=${{ secrets.EMAIL }}" >> $GITHUB_ENV
 
+      # Step 3: set up Git user configuration
       - name: Set git user
         run: |
           git config --global user.name "$USERNAME"
           git config --global user.email "$EMAIL"
 
-      # Step 3: Ensure we are on the master branch and pull the latest changes
-      - name: Checkout master and pull latest
-        run: |
-          git checkout master
-          git pull origin master
+      # Step 4: fetch latest changes 
+      - name: Fetch latest changes
+        run: git fetch origin master
 
-      # Step 4: Create or switch to the update branch
-      - name: Create and switch to update branch
-        run: |
-          git checkout -B update-branch
+      # Step 5: checkout to master branch 
+      - name: Checkout master branch
+        run: git checkout master
 
-      # Step 5: Merge master into update-branch (resolve conflicts if needed)
-      - name: Merge master into update-branch
-        run: |
-          git merge origin/master --strategy-option=ours || true
-          git add .
-          git merge --continue || true
-
-      # Step 6: Update the file (simulate a contribution)
+      # Step 6: add current IST and UTC time in update_log.md file  
       - name: Update update_log.md
         run: |
-          echo "" > update_log.md
-          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> update_log.md
+          echo "" > update_log.md  # Clear previous content
+          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S IST')" >> update_log.md
+          echo "# auto-updated at $(TZ='UTC' date +'%Y-%m-%d %H:%M:%S UTC')" >> update_log.md
 
-      # Step 7: Update, commit, and push changes
-      - name: Update, commit, and push changes
+      # Step 7: add update_log.md file and commit it  
+      - name: Add and commit changes
         run: |
-          # Update the file
-          echo "# auto-updated at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" > update_log.md
-
-          # Stage and commit the changes
           git add update_log.md
-          git commit -m "chore: auto update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git commit -m "Corrected typo in error message for invalid password"
 
-          # Push changes to the update branch
-          git push origin update-branch --force
-
-      # Step 8: Create a pull request
-      - name: Create Pull Request
-        id: create_pr  # Add an ID for output validation
-        uses: peter-evans/create-pull-request@v4 # Use the latest version
-        with:
-          title: "Auto-update at $(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')"
-          body: "Automated commit to update the log file"
-          base: master
-          branch: update-branch
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "[create-pull-request] automated change"
-          committer: GitHub <noreply@github.com>
-          author: ankitpakhale <ankitpakhale@users.noreply.github.com>
-          signoff: false
-          delete-branch: false
-          draft: false
-
-      # Step 8.5: Log Pull Request
-      - name: Debug - Log PR Output
-        run: |
-          echo "PR URL: ${{ steps.create_pr.outputs.pull-request-url }}"
-          echo "PR Number: ${{ steps.create_pr.outputs.pull-request-number }}"
-          echo "PR Created: ${{ steps.create_pr.outputs.pull-request-created }}"
-
-      # Step 9: Validate Pull Request
-      - name: Validate Pull Request
-        run: |
-          if [ -n "${{ steps.create_pr.outputs.pull-request-url }}" ]; then
-            echo "Pull Request successfully created: ${{ steps.create_pr.outputs.pull-request-url }}"
-          else
-            echo "Pull Request creation failed. Check previous steps for issues."
-            exit 1
-          fi
+      # Step 8: push the latest changes
+      - name: Push changes to master
+        run: git push origin master
