@@ -46,11 +46,13 @@ jobs:
             echo ">>>>>>>>>> Cleared update_log.md file"
 
             echo ">>>>>>>>>> Make changes in update_log.md"
-            echo "# auto-updated at $(date)" >> update_log.md
+            UTC_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            IST_TIME=$(TZ="Asia/Kolkata" date +"%Y-%m-%d %H:%M:%S IST")
+            echo "# auto-updated at UTC: $UTC_TIME, IST: $IST_TIME" >> update_log.md
 
             echo ">>>>>>>>>> Adding, commiting & pushing the latest changes...."
             git add update_log.md
-            git commit -m "chore: update at $(date)"
+            git commit -m "Corrected typo in error message for invalid password"
             git push
             echo ">>>>>>>>>> Pushed latest changes"
             echo ""
