@@ -10,3 +10,6 @@ This is a Django web application deployed on Netlify.
 ## Deployment on Netlify
 
 The project is deployed to Netlify. Any changes pushed to the main branch will trigger an automatic redeployment.
+
+
+
