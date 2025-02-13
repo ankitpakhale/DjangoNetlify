@@ -1,5 +1,5 @@
 # Django Project on Netlify
- 
+
 This is a Django web application deployed on Netlify.
 
 ## Features
